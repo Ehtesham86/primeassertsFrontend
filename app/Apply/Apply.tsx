@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import emailjs from '@emailjs/browser';
+import Swal from "sweetalert2";
 
 export default function ConsultationForm() {
-    const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [ShowNumbers, setShowNumbers] = useState(false); // Modal state
+     // Modal state
     const [formData, setFormData] = useState({
         name: '',
         amount_of_shares_held: '',
@@ -18,83 +21,117 @@ export default function ConsultationForm() {
         dataSharingConsent: false,
       });
     
-      // Handle input change
-      const handleChange = (e:any) => {
-        const { modalname, checked } = e.target;
-        setModalFormData((prev) => ({ ...prev, [modalname]: checked }));
-        const { name, value } = e.target;
-        setFormData({
-          ...formData,
-          [name]: value,
-        });
+      const handleChange = (e: any) => {
+        const { name, value, type, checked } = e.target;
+      
+        if (type === "checkbox") {
+          setModalFormData((prev) => ({
+            ...prev,
+            [name]: checked, // Properly update checkboxes
+          }));
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            [name]: value, // Properly update text/select inputs
+          }));
+        }
       };
-    
-      const handleSubmit = (e:any) => {
-        
+      
+      
+      const handleSubmit = async (e: any) => {
         e.preventDefault();
+        setIsModalOpen(true);
+
+        // Validate checkboxes
+        const { creditConsent, marketingConsent, dataSharingConsent } = modalformData;
+        if (!creditConsent || !marketingConsent || !dataSharingConsent) {
+          alert("모든 체크박스를 선택하세요."); // Alert if all are not checked
+          return;
+        }
+      
+        // Prepare template parameters
         const templateParams = {
-            user_name: formData.name,   // Ensure variable names match your application_amountJS template
-            user_amount_of_shares_held: formData.amount_of_shares_held,
-            user_phone: formData.phone,
-            user_application_amount: formData.application_amount,
-            user_person_in_charge: formData.person_in_charge,
-            user_asset:formData.asset,
-            
-          };
-          setIsModalOpen(true);
-          const { creditConsent, marketingConsent, dataSharingConsent } = modalformData;
-    
-          // Check if no checkbox is selected
-          if (!creditConsent && !marketingConsent && !dataSharingConsent) {
-            alert("옵션을 선택하세요.");
-            return;
+          user_name: formData.name,
+          user_amount_of_shares_held: formData.amount_of_shares_held,
+          user_phone: formData.phone,
+          user_application_amount: formData.application_amount,
+          user_person_in_charge: formData.person_in_charge,
+          user_asset: formData.asset,
+        };
+      
+        console.log("Form Data: ", templateParams);
+      
+        try {
+          // API Call
+          const response = await fetch("http://localhost:9001/primeassetForm", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
+      
+          if (!response.ok) {
+            throw new Error("Failed to submit form data to the server");
           }
       
-          // Check if all checkboxes are selected
-          if (!creditConsent || !marketingConsent || !dataSharingConsent) {
-            alert("모든 체크박스를 선택하세요.");
-            return;
-          }
-      
-          // If all checkboxes are selected, show success message
-          alert("양식이 성공적으로 제출되었습니다!");
-          setModalFormData({
-              creditConsent: false,
-              marketingConsent: false,
-              dataSharingConsent: false,
-            });
-        
-          // Ensure these match your application_amountJS configuration
+          // EmailJS Integration
           const serviceID = "service_eqwwduu";
           const templateID = "template_ykfj3j8";
           const publicKey = "RsJ7KTR_fyeePU8kv";
-          emailjs.send(serviceID, templateID, templateParams, publicKey)
-            .then((response) => {
-              console.log("amount_of_shares_held sent successfully!", response);
-              alert("Message sent successfully!");
-         
-              // Reset form
-              setFormData({
-                name: '',
-                amount_of_shares_held: '',
-                phone: '',
-                application_amount: '',
-                person_in_charge: '',
-                asset:'',
-              });
-            })
-            .catch((error) => {
-              console.error("Error sending amount_of_shares_held:", error);
-              alert("Failed to send message. Try again later.");
-            });
-           
-        console.log("Form Submitted: ", modalformData);
-       
       
+          await emailjs.send(serviceID, templateID, templateParams, publicKey);
+        
+            Swal.fire({
+              title: "Success!",
+              text: "Data Added successfully!",
+              icon: "success",
+              confirmButtonText: "OK",
+              timer: 3000, // Close after 3 seconds (3000ms)
+              showConfirmButton: false, // Hide "OK" button
 
+            });
+                    setIsModalOpen(false);
+          setShowNumbers(true)
+          // Reset forms after successful submission
+          setFormData({
+            name: "",
+            amount_of_shares_held: "",
+            phone: "",
+            application_amount: "",
+            person_in_charge: "",
+            asset: "",
+          });
+      
+          setModalFormData({
+            creditConsent: false,
+            marketingConsent: false,
+            dataSharingConsent: false,
+          });
+      
+          console.log("Form Submitted: ", modalformData);
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Failed to submit form. Try again later.");
+        }
       };
       
+      
+ const phoneNumbers = [
+    "+82 10-1234-5678",
+    "+82 10-9876-5432",
+    "+82 10-5678-9012",
+    "+82 10-3456-7890",
+    "+82 10-2345-6789",
+    "+82 10-6789-0123",
+    "+82 10-8765-4321",
+    "+82 10-7654-3210",
+    "+82 10-4321-0987",
+    "+82 10-9012-3456",
+  ];
 
+
+  const [randomNumbers, setRandomNumbers] = useState([]);
   return (
     <div className="bg-blue-500 px-4 md:px-10  py-10 lg:px-14 xl:px-30 2xl:px-52 lg:flex   text-white">
       <h2 className="text-lg font-bold w-1/4 mb-3">프리미엄 상담신청</h2>
@@ -246,7 +283,10 @@ export default function ConsultationForm() {
           </div>
           {/* Submit Button */}
           <div style={{ display: "flex", justifyContent: " right" }}>
-            <button type="submit"  style={{
+            <button 
+            onClick={     ()=>     setIsModalOpen(true)
+            }
+            type="submit"  style={{
               padding: "10px 50px",
               borderRadius: "5px",
               backgroundColor: "white",
@@ -262,6 +302,19 @@ export default function ConsultationForm() {
             </button>
           </div>
         </form>
+        {ShowNumbers?
+          <div className="mt-6 bg-gray-100 p-4 rounded-lg shadow-lg">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">📞 최근 랜덤 전화번호</h2>
+          <ul className="list-none">
+            {phoneNumbers.map((number, index) => (
+              <li key={index} className="text-gray-700 text-lg font-medium border-b py-2">
+                {number}
+              </li>
+            ))}
+          </ul>
+        </div>:''
+        }
+      
       </div>
             {/* Modal */}
             {isModalOpen && (
@@ -319,13 +372,14 @@ export default function ConsultationForm() {
          </p>
       </div>
       <label className="flex items-center text-gray-700 mt-1">
-        <input
-          type="checkbox"
-          name="creditConsent"
-          checked={modalformData.creditConsent}
-          onChange={handleChange}
-          className="mr-2 text-black"
-        />
+      <input
+  type="checkbox"
+  name="creditConsent"
+  checked={modalformData.creditConsent}
+  onChange={handleChange}
+  className="mr-2 text-black"
+/>
+
         개인신용정보 수집 및 이용에 동의합니다.
       </label>
 
@@ -480,7 +534,7 @@ export default function ConsultationForm() {
       {/* Submit Button */}
       <div className='flex justify-end gap-5 items-center'>
       <button
-       onClick={() => setIsModalOpen(false)}
+       onClick={() => handleSubmit}
         type="submit"
         className="mt-5 px-8 py-3 bg-blue-400 text-black rounded-md"
       >
