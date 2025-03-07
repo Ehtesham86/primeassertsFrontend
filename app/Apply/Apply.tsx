@@ -63,7 +63,7 @@ export default function ConsultationForm() {
       
         try {
           // API Call
-          const response = await fetch("http://localhost:9001/primeassetForm", {
+          const response = await fetch("https://primeassertsbackend.vercel.app/primeassetForm", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

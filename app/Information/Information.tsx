@@ -37,7 +37,7 @@ const CTA = () => {
   
     try {
       console.log("Submitting form data:", formData);
-      const response = await fetch("http://localhost:9001/primeassetForm", {
+      const response = await fetch("https://primeassertsbackend.vercel.app/primeassetForm", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
